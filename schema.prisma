@@ -1,0 +1,65 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Member {
+  id        Int            @id @default(autoincrement())
+  discordId String         @unique
+  name      String
+  active    Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  transactions Transaction[]
+  loans       Loan[]
+}
+
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  member    Member   @relation(fields: [memberId], references: [id])
+  memberId  Int
+  type      TransactionType
+  amount    Decimal  @db.Decimal(18, 2)
+  note      String? 
+  item      Item?    @relation(fields: [itemId], references: [id])
+  itemId    Int?
+  loan      Loan?    @relation(fields: [loanId], references: [id])
+  loanId    Int?
+  createdAt DateTime @default(now())
+}
+
+model Item {
+  id        Int           @id @default(autoincrement())
+  name      String
+  category  String?
+  price     Decimal?       @db.Decimal(18, 2)
+  createdAt DateTime       @default(now())
+  transactions Transaction[]
+}
+
+model Loan {
+  id         Int           @id @default(autoincrement())
+  member     Member        @relation(fields: [memberId], references: [id])
+  memberId   Int
+  amount     Decimal       @db.Decimal(18, 2)
+  openAmount Decimal       @db.Decimal(18, 2)
+  status     LoanStatus    @default(OPEN)
+  createdAt  DateTime      @default(now())
+  transactions Transaction[]
+}
+
+enum TransactionType {
+  EINZAHLUNG
+  AUSZAHLUNG
+  KAUF
+  KREDIT_AUSZAHLUNG
+  KREDIT_RUECKZAHLUNG
+}
+
+enum LoanStatus {
+  OPEN
+  CLOSED
+}
